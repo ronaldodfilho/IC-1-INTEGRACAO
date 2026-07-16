@@ -3,6 +3,10 @@
 *.jar
 *.war
 
+### Arquivos gerados pela aplicação ###
+downloads/
+extraidos/
+
 ### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/
