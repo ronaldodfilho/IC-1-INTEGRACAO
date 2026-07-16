@@ -1,4 +1,5 @@
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 
 public class Main {
@@ -19,6 +20,25 @@ public class Main {
         List<ArquivoTrimestre> arquivosRecentes =
                 ansService.listarUltimosTresTrimestres(anos);
 
+        System.out.println("Iniciando Download...");
         ansService.baixarTrimestres(arquivosRecentes);
+        System.out.println("Download concluído!");
+
+        for (ArquivoTrimestre arquivo : arquivosRecentes) {
+
+            Path caminhoZip = Path.of("downloads", arquivo.getNome());
+
+            String nomePastaDestino = arquivo.getNome().replace(".zip", "");
+            Path destino = Path.of("downloads", "extraídos", nomePastaDestino);
+
+            try {
+                ZipService.extrairArquivo(caminhoZip, destino);
+            }
+            catch (IOException e) {
+                System.err.println("Erro ao processar o arquivo " + arquivo.getNome());
+            }
+
+
+        }
     }
 }
