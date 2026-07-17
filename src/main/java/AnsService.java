@@ -137,6 +137,7 @@ public class AnsService {
             arquivosEncontrados.addAll(arquivosDoAno);
         }
 
+        // Inverte a ordem dos anos: Mais recente -> Mais antigo
         arquivosEncontrados.sort(Comparator.comparingInt(ArquivoTrimestre::getAno)
                 .thenComparingInt(ArquivoTrimestre::getTrimestre)
                 .reversed());

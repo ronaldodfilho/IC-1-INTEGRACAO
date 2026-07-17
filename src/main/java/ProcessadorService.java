@@ -138,6 +138,7 @@ public class ProcessadorService {
 
                     String contaContabil = colunas[indiceConta];
 
+                    // 411 - despesas com Eventos/Sinistros
                     if (contaContabil.startsWith("411")){
 
                         String descricao = (indiceDescricao != -1) ? colunas[indiceDescricao] : "";

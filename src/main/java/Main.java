@@ -10,6 +10,7 @@ public class Main {
     public static void main(String[] args) throws IOException {
         AnsService ansService = new AnsService();
 
+        // Baixa últimos três trimestres
         String html = ansService.buscarHtml(AnsService.URL_BASE);
         if (html == null) {
             System.err.println("Não foi possível iniciar o processo.");
@@ -24,6 +25,7 @@ public class Main {
         ansService.baixarTrimestres(arquivosRecentes);
         System.out.println("Download concluído!");
 
+        // Extração .zip
         for (ArquivoTrimestre arquivo : arquivosRecentes) {
             Path caminhoZip = Path.of("downloads", arquivo.getNome());
             Path destino = Path.of("downloads", "extraídos", arquivo.getNome().replace(".zip", ""));
@@ -34,8 +36,10 @@ public class Main {
             }
         }
 
+        // Mapeamento de operadoras
         ProcessadorService.carregarCadastroOperadoras(Path.of("recursos", "Relatorio_cadop.csv"));
 
+        // Exportação dos dados
         System.out.println("Iniciando processamento dos dados...");
         Path pastaExtraidos = Path.of("downloads", "extraídos");
 
