@@ -7,10 +7,6 @@ import java.util.zip.ZipInputStream;
 
 public class ZipService {
 
-    public ZipService() {
-        //something
-    }
-
     public static void extrairArquivo(Path arquivoZip, Path pastaDestino) throws IOException {
 
         Files.createDirectories(pastaDestino);
