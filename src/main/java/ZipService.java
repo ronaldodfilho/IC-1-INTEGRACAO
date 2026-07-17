@@ -14,14 +14,13 @@ public class ZipService {
         try (ZipInputStream zipInput = new ZipInputStream(new FileInputStream(arquivoZip.toFile()))) {
             ZipEntry entrada;
 
-            while ((entrada = zipInput.getNextEntry()) != null){
+            while ((entrada = zipInput.getNextEntry()) != null) {
 
                 Path caminhoArquivoFinal = pastaDestino.resolve(entrada.getName());
 
                 if (entrada.isDirectory()) {
                     Files.createDirectories(caminhoArquivoFinal);
-                }
-                else {
+                } else {
                     Files.createDirectories(caminhoArquivoFinal.getParent());
                     Files.copy(zipInput, caminhoArquivoFinal, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
                 }

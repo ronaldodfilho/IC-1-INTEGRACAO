@@ -32,7 +32,7 @@ public class Main {
             try {
                 ZipService.extrairArquivo(caminhoZip, destino);
             } catch (IOException e) {
-                System.err.println("Erro ao extrair: " + arquivo.getNome());
+                throw new RuntimeException("Erro ao extrair o arquivo: " + arquivo.getNome(), e);
             }
         }
 
@@ -48,7 +48,7 @@ public class Main {
             Path arquivoCsv = pastaExtraidos.resolve(nomePasta).resolve(nomePasta + ".csv");
 
             if (Files.exists(arquivoCsv)) {
-                ProcessadorService.processarAquivo(arquivoCsv);
+                ProcessadorService.processarArquivo(arquivoCsv);
             }
         }
 

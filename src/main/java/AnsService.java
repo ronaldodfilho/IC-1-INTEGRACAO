@@ -32,11 +32,7 @@ public class AnsService {
 
     public String buscarHtml(String url) {
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(10))
-                .GET()
-                .build();
+        HttpRequest request = criarRequisicao(url, 10);
 
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
@@ -47,10 +43,10 @@ public class AnsService {
                 System.out.println("Não foi possível obter o HTML, ocorreu um erro: " + response.statusCode());
             }
         } catch (IOException e) {
-            System.err.println("Erro de conexão: " + e.getMessage());
+            throw new RuntimeException("Erro de coneão ao obter o HTMl em: " + url, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            System.err.println("A requisição foi interrompida: " + e.getMessage());
+            throw new RuntimeException("Requisição interrompida durante a obtenção do HTML " + e);
         }
 
         return null;
@@ -170,13 +166,13 @@ public class AnsService {
 
     public void baixarTrimestres(List<ArquivoTrimestre> arquivos) throws IOException {
 
-        for(ArquivoTrimestre arquivo : arquivos) {
+        for (ArquivoTrimestre arquivo : arquivos) {
 
-            HttpRequest downloadRequest = criarRequisicao(arquivo.getUrl(),45);
+            HttpRequest downloadRequest = criarRequisicao(arquivo.getUrl(), 45);
 
 
-                Files.createDirectories(Path.of("downloads"));
-                Path destino = Path.of("downloads", arquivo.getNome());
+            Files.createDirectories(Path.of("downloads"));
+            Path destino = Path.of("downloads", arquivo.getNome());
 
             try {
                 HttpResponse<Path> response = client.send(downloadRequest, HttpResponse.BodyHandlers.ofFile(destino));
@@ -187,14 +183,15 @@ public class AnsService {
                     System.out.println("Ocorreu um erro: " + response.statusCode());
                 }
             } catch (IOException e) {
-                System.err.println("Erro de conexão: " + e.getMessage());
+                throw new RuntimeException("Falha ao baixar o arquivo " + arquivo.getNome(), e);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                System.err.println("A requisição foi interrompida: " + e.getMessage());
+                throw new RuntimeException("O download foi interrompido " + e);
             }
         }
     }
-    private HttpRequest criarRequisicao(String url, int time){
+
+    private HttpRequest criarRequisicao(String url, int time) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .timeout(Duration.ofSeconds(time))

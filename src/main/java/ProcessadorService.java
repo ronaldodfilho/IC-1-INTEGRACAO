@@ -1,5 +1,4 @@
 import java.io.*;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,6 +9,8 @@ public class ProcessadorService {
     private static final Map<String, OperadoraCadastro> cadastroOperadoras = new HashMap<>();
 
     private static final Map<String, ConsolidaDTO> consolidadoMap = new HashMap<>();
+
+    private static final String CONTA_DESPESAS_EVENTOS_SINISTROS = "411";
 
     public static void carregarCadastroOperadoras(Path caminhoCadop) {
 
@@ -34,11 +35,9 @@ public class ProcessadorService {
 
                 if (coluna.equalsIgnoreCase("REGISTRO_OPERADORA")) {
                     indiceRegAns = i;
-                }
-                else if (coluna.equalsIgnoreCase("CNPJ")) {
+                } else if (coluna.equalsIgnoreCase("CNPJ")) {
                     indiceCnpj = i;
-                }
-                else if (coluna.equalsIgnoreCase("Razao_Social")) {
+                } else if (coluna.equalsIgnoreCase("Razao_Social")) {
                     indiceRazaoSocial = i;
                 }
             }
@@ -50,7 +49,7 @@ public class ProcessadorService {
 
             String linha;
 
-            while((linha = reader.readLine()) != null) {
+            while ((linha = reader.readLine()) != null) {
 
                 String linhaLimpa = linha.replace("\"", "");
                 String[] dados = linhaLimpa.split(separador);
@@ -62,26 +61,25 @@ public class ProcessadorService {
                     String cnpj = dados[indiceCnpj].trim();
                     String razaoSocial = dados[indiceRazaoSocial].trim();
 
-                    cadastroOperadoras.put(regAns, new OperadoraCadastro(cnpj,razaoSocial));
+                    cadastroOperadoras.put(regAns, new OperadoraCadastro(cnpj, razaoSocial));
                 }
             }
 
             System.out.println("Cadastro CADOP carregado: " + cadastroOperadoras.size() + " operadoras mapeadas");
 
-        }
-        catch (IOException e) {
-            System.err.println("Erro ao ler o arquivo CADOP local");
+        } catch (IOException e) {
+            throw new RuntimeException("Erro crítico: Não foi possível ler o arquivo CADOP local em: " + caminhoCadop, e);
         }
 
     }
 
-    public static void processarAquivo(Path caminhoArquivo) {
+    public static void processarArquivo(Path caminhoArquivo) {
 
         System.out.println("Processando arquivo " + caminhoArquivo.getFileName() + "...");
 
         String linha;
 
-        try(BufferedReader reader = new BufferedReader(new FileReader(caminhoArquivo.toFile()))){
+        try (BufferedReader reader = new BufferedReader(new FileReader(caminhoArquivo.toFile()))) {
 
             String cabecalho = reader.readLine();
             if (cabecalho == null) return;
@@ -103,30 +101,26 @@ public class ProcessadorService {
 
                 if (nomeColuna.equalsIgnoreCase("CD_CONTA_CONTABIL")) {
                     indiceConta = i;
-                }
-                else if (nomeColuna.equalsIgnoreCase("DESCRICAO")) {
+                } else if (nomeColuna.equalsIgnoreCase("DESCRICAO")) {
                     indiceDescricao = i;
-                }
-                else if (nomeColuna.equalsIgnoreCase("VL_SALDO_FINAL")) {
+                } else if (nomeColuna.equalsIgnoreCase("VL_SALDO_FINAL")) {
                     indiceValor = i;
-                }
-                else if (nomeColuna.equalsIgnoreCase("REG_ANS")) {
+                } else if (nomeColuna.equalsIgnoreCase("REG_ANS")) {
                     indiceRegAns = i;
-                }
-                else if (nomeColuna.equalsIgnoreCase("DATA")) {
+                } else if (nomeColuna.equalsIgnoreCase("DATA")) {
                     indiceData = i;
                 }
             }
 
-            if (indiceValor == -1 && indiceConta == -1){
-                System.out.println("Aquivo invalido! Colunas não encontradas!");
+            if (indiceValor == -1 && indiceConta == -1) {
+                System.out.println("Aquivo inválido! Colunas não encontradas!");
                 return;
             }
 
             String ano = "";
             String trimestre = "";
 
-            while((linha = reader.readLine()) != null){
+            while ((linha = reader.readLine()) != null) {
 
                 String linhaLimpa = linha.replace("\"", "");
                 String[] colunas = linhaLimpa.split(separador);
@@ -139,14 +133,14 @@ public class ProcessadorService {
                     String contaContabil = colunas[indiceConta];
 
                     // 411 - despesas com Eventos/Sinistros
-                    if (contaContabil.startsWith("411")){
+                    if (contaContabil.startsWith(CONTA_DESPESAS_EVENTOS_SINISTROS)) {
 
                         String descricao = (indiceDescricao != -1) ? colunas[indiceDescricao] : "";
                         String valorTexto = colunas[indiceValor];
 
                         double valorNormalizado = converterParaDouble(valorTexto);
 
-                        if (valorNormalizado <= 0.0){
+                        if (valorNormalizado <= 0.0) {
                             continue;
                         }
 
@@ -154,7 +148,7 @@ public class ProcessadorService {
                         ano = data.length() >= 4 ? data.substring(0, 4) : "Inconsistente";
                         trimestre = "Inconsistente";
 
-                        if (data.length() >= 7){
+                        if (data.length() >= 7) {
 
                             String mes = data.substring(5, 7);
                             trimestre = obterTrimestre(mes);
@@ -166,62 +160,73 @@ public class ProcessadorService {
 
                         String chaveUnica = cnpj + "_" + trimestre + "_" + ano;
 
-                        if (consolidadoMap.containsKey(chaveUnica)){
+                        if (consolidadoMap.containsKey(chaveUnica)) {
                             consolidadoMap.get(chaveUnica).adicionarValor(valorNormalizado);
-                        }
-                        else{
-                            consolidadoMap.put(chaveUnica, new ConsolidaDTO(cnpj, razaoSocial,trimestre,ano,valorNormalizado));
+                        } else {
+                            consolidadoMap.put(chaveUnica, new ConsolidaDTO(cnpj, razaoSocial, trimestre, ano, valorNormalizado));
                         }
                     }
 
                 }
-        }
+            }
         } catch (IOException e) {
             System.err.println("Erro ao ler ou processar o arquivo " + caminhoArquivo.getFileName());
         }
     }
 
-    private static String obterTrimestre(String mes){
+    private static String obterTrimestre(String mes) {
 
-        switch (mes){
-            case "01": case "02": case "03": return "1º Trimestre";
-            case "04": case "05": case "06": return "2º Trimestre";
-            case "07": case "08": case "09": return "3º Trimestre";
-            case "10": case "11": case "12": return "4º Trimestre";
-            default: return "Inconsistente";
+        switch (mes) {
+            case "01":
+            case "02":
+            case "03":
+                return "1º Trimestre";
+            case "04":
+            case "05":
+            case "06":
+                return "2º Trimestre";
+            case "07":
+            case "08":
+            case "09":
+                return "3º Trimestre";
+            case "10":
+            case "11":
+            case "12":
+                return "4º Trimestre";
+            default:
+                return "Inconsistente";
         }
     }
 
-    private static double converterParaDouble(String texto){
+    private static double converterParaDouble(String texto) {
 
         if (texto == null || texto.isEmpty()) return 0.0;
         String limpo = texto.trim().replace("\"", "");
         if (limpo.isEmpty() || limpo.equals("-")) return 0.0;
 
-        limpo = limpo.replace(",",".");
+        limpo = limpo.replace(",", ".");
 
         try {
             return Double.parseDouble(limpo);
-        }
-        catch (NumberFormatException e){
+        } catch (NumberFormatException e) {
             return 0.0;
         }
     }
 
-    private static String buscarCnpjPorAns(String regAns){
+    private static String buscarCnpjPorAns(String regAns) {
 
         OperadoraCadastro operadora = cadastroOperadoras.get(regAns);
 
-        if ((operadora != null) && operadora.getCnpj() != null){
+        if ((operadora != null) && operadora.getCnpj() != null) {
             return operadora.getCnpj();
         }
         return "Não encontrado - " + regAns;
     }
 
-    private static String buscarRazaoSocial(String regAns){
+    private static String buscarRazaoSocial(String regAns) {
 
         OperadoraCadastro operadora = cadastroOperadoras.get(regAns);
-        if ((operadora != null) && operadora.getRazaoSocial() != null){
+        if ((operadora != null) && operadora.getRazaoSocial() != null) {
             return operadora.getRazaoSocial();
         }
         return "Não encontrado - " + regAns;
@@ -241,7 +246,7 @@ public class ProcessadorService {
                 String cnpj = dto.cnpj != null ? dto.cnpj : "";
                 String razaoSocial = dto.razaoSocial != null ? dto.razaoSocial : "";
 
-                String linha = String.format("%s,%s,%s,%s,%.2f",
+                String linha = String.format("%s;%s;%s;%s;%.2f",
                         cnpj,
                         razaoSocial,
                         dto.trimestre,
@@ -253,9 +258,8 @@ public class ProcessadorService {
             }
 
             System.out.println("Consolidado com sucesso!");
-        }
-        catch (IOException e){
-            System.err.println("Erro ao salvar o arquivo CSV consolidado");
+        } catch (IOException e) {
+            throw new RuntimeException("Erro fatal ao salvar o arquivo CSV consolidado em: " + caminhoSaida.getFileName(), e);
         }
     }
 }
