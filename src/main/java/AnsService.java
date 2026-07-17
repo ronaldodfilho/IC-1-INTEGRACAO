@@ -171,7 +171,7 @@ public class AnsService {
 
         for(ArquivoTrimestre arquivo : arquivos) {
 
-            HttpRequest downloadRequest = criarRequisicao(arquivo.getUrl());
+            HttpRequest downloadRequest = criarRequisicao(arquivo.getUrl(),45);
 
 
                 Files.createDirectories(Path.of("downloads"));
@@ -193,10 +193,10 @@ public class AnsService {
             }
         }
     }
-    private HttpRequest criarRequisicao(String url){
+    private HttpRequest criarRequisicao(String url, int time){
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
-                .timeout(Duration.ofSeconds(10))
+                .timeout(Duration.ofSeconds(time))
                 .GET()
                 .build();
 
