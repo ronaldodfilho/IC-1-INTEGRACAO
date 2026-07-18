@@ -1,6 +1,7 @@
 import java.io.*;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 
@@ -246,7 +247,7 @@ public class ProcessadorService {
                 String cnpj = dto.cnpj != null ? dto.cnpj : "";
                 String razaoSocial = dto.razaoSocial != null ? dto.razaoSocial : "";
 
-                String linha = String.format("%s;%s;%s;%s;%.2f",
+                String linha = String.format( Locale.US,"%s;%s;%s;%s;%.2f",
                         cnpj,
                         razaoSocial,
                         dto.trimestre,
